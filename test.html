@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dropdown with Buttons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2e2e2e;
+            color: white;
+        }
+
+        /* Dropdown container */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Dropdown button */
+        .dropdown button {
+            background-color: #3c3c3c;
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        /* Dropdown content (hidden by default) */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #4c4c4c;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            z-index: 1;
+        }
+
+        /* Buttons inside the dropdown */
+        .dropdown-content button {
+            background-color: #5c5c5c;
+            color: white;
+            padding: 10px;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 0;
+            transition: background-color 0.3s ease; /* Smooth background color change */
+        }
+
+        /* Change background color on hover */
+        .dropdown-content button:hover {
+            background-color: #7c7c7c; /* Lighter color on hover */
+        }
+
+        /* Show the dropdown content on hover of the dropdown button */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Prevent the dropdown button from changing background color */
+        .dropdown:hover > button {
+            background-color: #3c3c3c; /* Keep the original color */
+        }
+    </style>
+</head>
+<body>
+
+<div class="dropdown">
+    <button>Dropdown</button>
+    <div class="dropdown-content">
+        <button onclick="alert('Button 1 clicked')">Button 1</button>
+        <button onclick="alert('Button 2 clicked')">Button 2</button>
+        <button onclick="alert('Button 3 clicked')">Button 3</button>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,18 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>p5 Menu Tool</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-  </head>
+  <title>p5 Menu Tool</title>
 
-  <body style="background-color: #1d1d1d; margin:0;">
-    <script src="classes.js"></script>
-    <script src="sketch.js"></script>
-  </body>
+  <style>
+    /* Dropdown container */
+    .dropdown {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      /* Centers horizontally */
+      align-items: center;
+      /* Centers vertically */
+    }
+
+    /* Dropdown button */
+    .dropdown button {
+      background-color: #5A5888;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Dropdown content (hidden by default) */
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 40px;
+      background-color: #5A5888;
+      width: 80%;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      z-index: 1;
+    }
+
+    /* Buttons inside the dropdown */
+    .dropdown-content button {
+      background-color: #5A5888;
+      color: white;
+      padding: 10px;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      border-radius: 0;
+      transition: background-color 0.3s ease;
+      /* Smooth background color change */
+    }
+
+    /* Change background color on hover */
+    .dropdown-content button:hover {
+      background-color: #665599;
+      /* Lighter color on hover */
+    }
+
+    /* Show the dropdown content on hover of the dropdown button */
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    /* Prevent the dropdown button from changing background color */
+    .dropdown:hover>button {
+      background-color: #665599;
+      /* Keep the original color */
+    }
+
+    ul {
+      list-style-type: none;
+      /* This removes the bullets */
+      padding-left: 0;
+      /* Removes the default left padding */
+    }
+
+    /* Optional styling for list items */
+    li {
+      padding: 10px;
+      background-color: #4c4c4c;
+      margin-bottom: 5px;
+      color: white;
+    }
+
+    .selected {
+      background-color: #b94747;
+    }
+  </style>
+
+  <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+    integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
+    crossorigin="anonymous"></script>
+  <script src="libraries/p5.min.js"></script>
+  <script src="libraries/p5.sound.min.js"></script>
+</head>
+
+<body style="background-color: #1d1d1d; margin:0;">
+  <script src="classes.js"></script>
+  <script src="sketch.js"></script>
+</body>
+
 </html>
