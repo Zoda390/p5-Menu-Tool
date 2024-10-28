@@ -8,14 +8,13 @@ var leftMenu;
 var rightMenu;
 var canvas;
 var itemList;
+var boxSettingsDiv;
+var txtSettingsDiv;
+
 
 const leway = 10;
-var boxes = [];
-var txts = [];
-var sBox = -1;
-var sTxt = -1;
+var objects = [];
 var clickBegin = -1;
-var typing = false;
 var flashTimer = 0;
 var flash = false;
 var boxCount = 0;
@@ -24,7 +23,6 @@ var txtCount = 0;
 function setup(){
     //socket = io.connect("http://localhost:3001");
     ps = new Page_Sorter();
-
     mainDiv = createDiv();
     mainDiv.style("background-color: #555555;");
     mainDiv.id("mainDiv");
@@ -39,8 +37,8 @@ function setup(){
         <button style="">Add</button>
         <div class="dropdown-content">
             <button onclick="">Add Page</button>
-            <button onclick="boxes.push(new Box(100, 100, 100, 100, 200,100,100)); itemList.addItem('box'+boxCount); boxCount++;">Add Box</button>
-            <button onclick="txts.push(new Txt('bla', 100, 100, 0,0,0)); itemList.addItem('txt'+txtCount); txtCount++;">Add Text</button>
+            <button onclick="objects.push(new Box(100, 100, 100, 100, 200,100,100)); itemList.addItem('box'+boxCount); boxCount++;">Add Box</button>
+            <button onclick="objects.push(new Txt('bla', 100, 100, 0,0,0)); itemList.addItem('txt'+txtCount); txtCount++;">Add Text</button>
         </div>
     `);
     leftMenu.parent(rightDiv);
@@ -52,6 +50,8 @@ function setup(){
         <div class="dropdown-content">
         <button onclick="createJS()">Save</button>
         <button onclick="console.log('not implimented yet')">Open</button>
+        <button onclick="setCanvasPercents(prompt('width,height'))">Set Canvas Size</button>
+        <button onclick="alert('${fp.w*innerWidth},${fp.h*innerHeight}')">Get Canvas Size</button>
         </div>
     `);
     rightMenu.parent(rightDiv);
@@ -62,6 +62,52 @@ function setup(){
     bottomDiv.style("background-color: #665599; border:1px solid black;");
     bottomDiv.id("bottomDiv");
 
+    boxSettingsDiv = createDiv(`
+        <h1 style="margin: 5px;">Box Settings:</h1>
+        <div>
+        <label for="fillColor" style="margin-left: 10px; font-size: x-large;">Fill Color:</label>
+        <input type="color" id="fillColor" name="fillColor" oninput="updateBoxColor(this.value)" style="background-color: #4c4c4c; color: white; font-size: x-large;">
+        <label for="width" style="margin-left: 10px; font-size: x-large;">Box Width:</label>
+        <input type="number" id="width" name="width" oninput="updateBoxWidth(this.value)" style="background-color: #4c4c4c; color: white; font-size: x-large;">
+        <label for="height" style="margin-left: 10px; font-size: x-large;">Box Height:</label>
+        <input type="number" id="height" name="height" oninput="updateBoxHeight(this.value)" style="background-color: #4c4c4c; color: white; font-size: x-large;">
+        </div>
+    `);
+    boxSettingsDiv.style("color: white");
+    boxSettingsDiv.parent(bottomDiv);
+    boxSettingsDiv.position(0,0);
+    boxSettingsDiv.hide();
+    
+    txtSettingsDiv = createDiv(`
+        <h1 style="margin: 5px;">Text Settings:</h1>
+        <div>
+        <label for="innerTxt" style="margin-left: 10px; font-size: x-large;">Inner Text:</label>
+        <input type="text" id="innerTxt" name="innerTxt" oninput="updateTxt(this.value)" style="background-color: #4c4c4c; color: white; font-size: x-large;">
+        <label for="fillColor" style="margin-left: 10px; font-size: x-large;">Fill Color:</label>
+        <input type="color" id="fillColor" name="fillColor" oninput="updateTxtColor(this.value)" style="background-color: #4c4c4c; color: white; font-size: x-large;">
+        <label for="txtSize" style="margin-left: 10px; font-size: x-large;">Text Size:</label>
+        <input type="number" id="txtSize" name="txtSize" oninput="updateTxtSize(this.value)" style="background-color: #4c4c4c; color: white; font-size: x-large;">
+        </div>
+        <div style="margin-top: 10px;">
+        <label for="vAlign" style="margin-left: 10px; font-size: x-large;">Vertical Alignment:</label>
+        <select id="vAlign" name="vAlign" oninput="updateTxtAlignV(this.value)" style="background-color: #4c4c4c; color: white; font-size: x-large;">
+            <option value="top">Top</option>
+            <option value="center">Center</option>
+            <option value="bottom">Bottom</option>
+        </select>
+        <label for="hAlign" style="margin-left: 10px; font-size: x-large;">Horizontal Alignment:</label>
+        <select id="hAlign" name="hAlign" oninput="updateTxtAlignH(this.value)" style="background-color: #4c4c4c; color: white; font-size: x-large;">
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+        </select>
+        </div>
+    `);
+    txtSettingsDiv.style("color: white");
+    txtSettingsDiv.parent(bottomDiv);
+    txtSettingsDiv.position(0,0);
+    txtSettingsDiv.hide();
+
 
 
     canvas = createCanvas(10,10);
@@ -70,22 +116,39 @@ function setup(){
     resizeMain();
     addEventListener("resize", (event) => {resizeMain()});
 
+    textWrap(WORD);
+
     //load pages
     //ps.show("Main Menu");
 }
 
 function draw(){
     background(100);
-    for(let i=0; i<boxes.length; i++){
-        boxes[i].render((sBox==i));
-        if(mouseIsPressed & i==sBox){
-            boxes[i].update();
+    for(let i=0; i<objects.length; i++){
+        objects[i].render(itemList.sIDs.includes(objects[i].id));
+        if(mouseIsPressed && itemList.sIDs.includes(objects[i].id)){
+            if(mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) objects[i].update();
         }
     }
-    for(let i=0; i<txts.length; i++){
-        txts[i].render((sTxt==i));
-        if(mouseIsPressed & i==sTxt){
-            txts[i].update();
+
+    //render selection box
+    if(mouseIsPressed && clickBegin != -1){
+        if(abs(mouseX-(fp.w*innerWidth)) < leway){
+            fp.w = mouseX/innerWidth;
+            resizeMain();
+        }
+        if(abs(mouseY-(fp.h*innerHeight)) < leway){
+            fp.h = mouseY/innerHeight;
+            resizeMain();
+        }
+        else{
+            if(itemList.sIDs.length == 0){
+                push();
+                fill(0,255,255,50);
+                stroke(0,255,255,100);
+                rect(clickBegin.x, clickBegin.y, mouseX-clickBegin.x, mouseY-clickBegin.y);
+                pop();
+            }
         }
     }
 }
@@ -108,304 +171,221 @@ function resizeMain(){
     
     bottomDiv.position(0, innerHeight*fp.h);
     bottomDiv.size(innerWidth-2, (innerHeight*(1-fp.h))-2);
-    resizeCanvas((innerWidth*fp.w), (innerHeight*fp.h)-1);
-}
-
-function selectItemByID(id){
-    if(id.includes("box")){
-        sBox = id.split("box").pop();
-        itemList.sID = id;
-    }
-    if(id.includes("txt")){
-        sBox = id.split("txt").pop();
-        itemList.sID = id;
+    for(let i=0; i<objects.length; i++){
+        objects[i].pos.x = round((objects[i].pos.x/width)*innerWidth*fp.w);
+        objects[i].pos.y = round((objects[i].pos.y/height)*innerHeight*fp.h);
+        objects[i].size.w = round((objects[i].size.w/width)*innerWidth*fp.w);
+        objects[i].size.h = floor((objects[i].size.h/height)*innerHeight*fp.h);
+        objects[i].regenHandles();
     }
     itemList.updatehtml();
-}
 
-class Box{
-    constructor(x,y,w,h,r,g,b){
-        this.sPos = createVector(x,y);
-        this.pos = createVector(x,y);
-        this.pos2 = createVector(x+w,y+h);
-        this.size = {w:w,h:h};
-        this.c = color(r,g,b);
-        this.img = null;
-        this.handles = [];
-        this.selectedHandle = -1;
-        this.regenHandles();
-    }
-    
-    toStr(){
-        let arr = [];
-        arr.push("fill("+this.c.levels[0]+","+this.c.levels[1]+","+this.c.levels[2]+");");
-        arr.push("rect("+this.pos.x+","+this.pos.y+","+this.size.w+","+this.size.h+");");
-        return arr;
-    }
-    
-    setImg(img){
-        this.img = img;
-    }
-    
-    regenHandles(){
-        this.handles = [];
-        this.handles.push(createVector(this.pos.x, this.pos.y));
-        this.handles.push(createVector(this.pos.x+(this.size.w/2), this.pos.y));
-        this.handles.push(createVector(this.pos.x+this.size.w, this.pos.y));
-        this.handles.push(createVector(this.pos.x, this.pos.y+(this.size.h/2)));
-        this.handles.push(createVector(this.pos.x+this.size.w, this.pos.y+(this.size.h/2)));
-        this.handles.push(createVector(this.pos.x, this.pos.y+this.size.h));
-        this.handles.push(createVector(this.pos.x+(this.size.w/2), this.pos.y+this.size.h));
-        this.handles.push(createVector(this.pos.x+this.size.w, this.pos.y+this.size.h));
-    }
-    
-    render(selected){
-        push();
-        fill(this.c)
-        rect(this.pos.x, this.pos.y, this.size.w, this.size.h);
-      
-        if(selected){
-            if(this.selectedHandle != -1){
-                fill(0,255,0);
-                rect(this.handles[this.selectedHandle].x-2.5,this.handles[this.selectedHandle].y-2.5, 5,5);
-            }
-            else{
-                //render handles
-                for(let i = 0; i<this.handles.length; i++){
-                    if(createVector(mouseX, mouseY).dist(this.handles[i]) < leway){fill(0,255,0);}
-                    else{fill(255);}
-                    rect(this.handles[i].x-2.5,this.handles[i].y-2.5, 5,5);
-                }
-            }
-        }
-        pop();
-    }
-    
-    update(){
-        if(this.selectedHandle != -1){
-            if(this.selectedHandle == 0){
-                this.pos.x = mouseX;
-                this.pos.y = mouseY;
-            }
-            if(this.selectedHandle == 1){
-                this.pos.y = mouseY;
-            }
-            if(this.selectedHandle == 2){
-                this.pos2.x = mouseX;
-                this.pos.y = mouseY;
-            }
-            if(this.selectedHandle == 3){
-                this.pos.x = mouseX;
-            }
-            if(this.selectedHandle == 4){
-                this.pos2.x = mouseX;
-            }
-            if(this.selectedHandle == 5){
-                this.pos.x = mouseX;
-                this.pos2.y = mouseY;
-            }
-            if(this.selectedHandle == 6){
-                this.pos2.y = mouseY;
-            }
-            if(this.selectedHandle == 7){
-                this.pos2.x = mouseX;
-                this.pos2.y = mouseY;
-            }
-            this.size.w = this.pos2.x-this.pos.x;
-            this.size.h = this.pos2.y-this.pos.y;
-        }
-        else{
-            if(mouseX>this.pos.x-leway && mouseX<this.pos.x+this.size.w+leway){
-                if(mouseY>this.pos.y-leway && mouseY<this.pos.y+this.size.h+leway){
-                    this.pos.x += mouseX-pmouseX;
-                    this.pos.y += mouseY-pmouseY;
-                }
-            }
-        }
-        this.regenHandles();
-    }
-}
-
-class Txt{
-    constructor(t, x, y, r,g,b){
-        this.t = t;
-        this.pos = createVector(x,y);
-        this.align = {x: LEFT, y: TOP};
-        this.c = color(r,g,b);
-        this.textSize = 12;
-        this.handles = [];
-        this.selectedHandle = -1;
-        this.regenHandles();
-    }
-
-    toStr(){
-        let arr = [];
-        arr.push("fill("+this.c.levels[0]+","+this.c.levels[1]+","+this.c.levels[2]+");");
-        arr.push("text("+this.t+","+this.pos.x+","+this.pos.y+");");
-        return arr;
-    }
-
-    regenHandles(){
-        this.handles = [];
-        this.handles.push(createVector(this.pos.x, this.pos.y));
-    }
-
-    render(selected){
-        push();
-        if(typing){
-            flashTimer ++;
-            if(flashTimer == 80){
-            flashTimer = 0;
-            flash = !flash;
-            }
-        }
-        textAlign(this.align.x, this.align.y);
-        fill(0);
-        text(this.t + ((flash&&selected&&typing)? "|":""), this.pos.x, this.pos.y);
-
-        if(selected){
-            if(this.selectedHandle != -1){
-                fill(0,255,0);
-                rect(this.handles[this.selectedHandle].x-2.5,this.handles[this.selectedHandle].y-2.5, 5,5);
-            }
-            else{
-                //render handles
-                for(let i = 0; i<this.handles.length; i++){
-                    if(createVector(mouseX, mouseY).dist(this.handles[i]) < leway){fill(0,255,0);}
-                    else{fill(255);}
-                    rect(this.handles[i].x-2.5,this.handles[i].y-2.5, 5,5);
-                }
-            }
-        }
-        pop();
-    }
-
-    update(){
-        if(this.selectedHandle != -1){
-            if(this.selectedHandle == 0){
-                this.pos.x = mouseX;
-                this.pos.y = mouseY;
-            }
-        }
-    }
-}
-  
-function createJS(){
-    let arr = [];
-    
-    arr.push("var boxes = [];");
-    arr.push("function setup(){");
-    arr.push("createCanvas(400, 400);");
-    arr.push("}");
-    arr.push("");
-    arr.push("function draw(){");
-    arr.push("background(100);");
-    arr.push("drawBoxes();");
-    arr.push("}");
-    arr.push("");
-    arr.push("function drawBoxes(){");
-    arr.push("push();");
-    arr.push("textAlign(CENTER, CENTER);");
-    for(let i=0; i<boxes.length; i++){
-        arr = arr.concat(boxes[i].toStr());
-    }
-    for(let i=0; i<txts.length; i++){
-        arr = arr.concat(txts[i].toStr());
-    }
-    arr.push("pop();");
-    arr.push("}");
-    console.log(arr);
-    //saveStrings(arr,"test","js",true);
+    resizeCanvas((innerWidth*fp.w), (innerHeight*fp.h)-1);
 }
   
 function mousePressed(){
-    if(clickBegin == -1){
+    if(clickBegin == -1){ //if you dont already have a clickBegin make one
         clickBegin = createVector(mouseX, mouseY);
     }
-    for(let i=0; i<boxes.length; i++){
-        if(sBox == -1){
-            if(mouseX>boxes[i].pos.x-leway && mouseX<boxes[i].pos.x+boxes[i].size.w+leway){
-                if(mouseY>boxes[i].pos.y-leway && mouseY<boxes[i].pos.y+boxes[i].size.h+leway){
-                    sBox = i;
-                    itemList.sID = "box"+i;
-                    itemList.updatehtml();
-                }
-            }
-        }
-        else{
-            for(let j=0; j<boxes[i].handles.length; j++){
-                if(createVector(mouseX,mouseY).dist(boxes[i].handles[j]) < leway){
-                    boxes[i].selectedHandle = j;
-                }
-            }
-            boxes[i].regenHandles();
-        }
-    }
 
-    for(let i=0; i<txts.length; i++){
-        if(sTxt == -1){
-            if(mouseX>txts[i].pos.x-leway && mouseX<txts[i].pos.x+leway){
-                if(mouseY>txts[i].pos.y-leway && mouseY<txts[i].pos.y+leway){
-                    sTxt = i;
-                    itemList.sID = "txt"+i;
-                    itemList.updatehtml();
+    if(itemList.sIDs.length == 0){
+    }
+    else{
+        if(mouseX > width || mouseX < 0 || mouseY > height || mouseY < 0) return;
+        let found = false;
+        //loop through selected items
+        for(let i=0; i<objects.length; i++){
+            if(found) continue;
+            if(itemList.sIDs.includes(objects[i].id)){
+                if(objects[i].pointCollision(mouseX, mouseY)){
+                    objects[i].selectHandle(mouseX, mouseY);
+                    found = true;
                 }
             }
         }
-        else{
-            for(let j=0; j<txts[i].handles.length; j++){
-                if(createVector(mouseX,mouseY).dist(txts[i].handles[j]) < leway){
-                    txts[i].selectedHandle = j;
-                }
-            }
-            txts[i].regenHandles();
-        }
+        
+        //if mouse is outside all selected items, deselect items
+        if(!found) itemList.sIDs = [];
+        itemList.updatehtml();
     }
 }
   
 function mouseReleased(){
+    //if mouse is outside canvas return early
+    if(mouseX > width || mouseX < 0 || mouseY > height || mouseY < 0){
+        clickBegin = -1; //reset clickBegin
+        return;
+    }
+
     let found = false;
 
-    if(sBox != -1){
-        if(boxes[sBox].size.w < 0){
-            let temp = boxes[sBox].pos.x;
-            boxes[sBox].pos.x = boxes[sBox].pos2.x;
-            boxes[sBox].pos2.x = temp;
-            boxes[sBox].size.w = boxes[sBox].pos2.x-boxes[sBox].pos.x;
-        }
-        if(boxes[sBox].size.h < 0){
-            let temp = boxes[sBox].pos.y;
-            boxes[sBox].pos.y = boxes[sBox].pos2.y;
-            boxes[sBox].pos2.y = temp;
-            boxes[sBox].size.h = boxes[sBox].pos2.y-boxes[sBox].pos.y;
-        }
-        if(mouseX>boxes[sBox].pos.x-leway && mouseX<boxes[sBox].pos.x+boxes[sBox].size.w+leway){
-            if(mouseY>boxes[sBox].pos.y-leway && mouseY<boxes[sBox].pos.y+boxes[sBox].size.h+leway){
-                found = true;
+    if(itemList.sIDs.length == 0){
+        if(createVector(mouseX,mouseY).dist(clickBegin) < leway){ //simple click (mouse didnt move during click)
+            //simple search to find a selected item
+            for(let i=objects.length-1; i>=0; i--){
+                if(found) continue;
+                if(objects[i].pointCollision(mouseX,mouseY)){
+                    if(!itemList.sIDs.includes(objects[i].id)) itemList.sIDs.push(objects[i].id);
+                    found = true;
+                }
             }
         }
-        boxes[sBox].selectedHandle = -1;
+        else{ //mouse was probably dragged?
+            //check if 40% of an object is within the selection box
+            for(let i=0; i<objects.length; i++){
+                if(objects[i].boxCollision(clickBegin.x, clickBegin.y, mouseX-clickBegin.x, mouseY-clickBegin.y)){
+                    if(!itemList.sIDs.includes(objects[i].id)) itemList.sIDs.push(objects[i].id);
+                    found = true;
+                }
+            }
+        }
     }
+    else{ 
+        //if you have selected items assume your mouse is still inside them
+        found = true;
 
-    if(sTxt != -1){
-        if(mouseX>txts[sTxt].pos.x-leway && mouseX<txts[sTxt].pos.x+leway){
-            if(mouseY>txts[sTxt].pos.y-leway && mouseY<txts[sTxt].pos.y+leway){
-                found = true;
-                typing = true;
+        //fix any negative sizes and release handles
+        for(let i=0; i<objects.length; i++){
+            if(itemList.sIDs.includes(objects[i].id)){
+                if(objects[i].size.w < 0){
+                    let temp = objects[i].pos.x;
+                    objects[i].pos.x = objects[i].pos2.x;
+                    objects[i].pos2.x = temp;
+                    objects[i].size.w = objects[i].pos2.x-objects[i].pos.x;
+                }
+                if(objects[i].size.h < 0){
+                    let temp = objects[i].pos.y;
+                    objects[i].pos.y = objects[i].pos2.y;
+                    objects[i].pos2.y = temp;
+                    objects[i].size.h = objects[i].pos2.y-objects[i].pos.y;
+                }
+                objects[i].selectedHandle = -1;
             }
         }
-        txts[sTxt].selectedHandle = -1;
     }
     
-    if(!found){
-        sBox = -1;
-        sTxt = -1;
-        itemList.sID = -1;
-        itemList.updatehtml();
-    }
+    if(!found) itemList.sIDs = [];
+    itemList.updatehtml();
+
+    //reset clickBegin
     clickBegin = -1;
 }
 
 function keyReleased(){
 
+}
+
+function updateBoxColor(val){
+    let c = color(val);
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id.includes("box")){
+            if(itemList.sIDs.includes(objects[i].id)){
+                objects[i].c = c;
+            }
+        }
+    }
+}
+
+function updateBoxWidth(val){
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id.includes("box")){
+            if(itemList.sIDs.includes(objects[i].id)){
+                objects[i].size.w = parseFloat(val);
+                if(objects[i].size.w < 0){ //fix negative values
+                    let temp = objects[i].pos.x;
+                    objects[i].pos.x = objects[i].pos2.x;
+                    objects[i].pos2.x = temp;
+                    objects[i].size.w = objects[i].pos2.x-objects[i].pos.x;
+                    boxSettingsDiv.elt.children[4].value = objects[i].size.w;
+                }
+                objects[i].regenHandles();
+            }
+        }
+    }
+}
+
+function updateBoxHeight(val){
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id.includes("box")){
+            if(itemList.sIDs.includes(objects[i].id)){
+                objects[i].size.h = parseFloat(val);
+                if(objects[i].size.h < 0){ //fix negative values
+                    let temp = objects[i].pos.y;
+                    objects[i].pos.y = objects[i].pos2.y;
+                    objects[i].pos2.y = temp;
+                    objects[i].size.h = objects[i].pos2.y-objects[i].pos.y;
+                    boxSettingsDiv.elt.children[6].value = objects[i].size.h;
+                }
+                objects[i].regenHandles();
+            }
+        }
+    }
+}
+
+function updateTxt(val){
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id.includes("txt")){
+            if(itemList.sIDs.includes(objects[i].id)){
+                objects[i].t = val;
+            }
+        }
+    }
+}
+
+function updateTxtColor(val){
+    let c = color(val);
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id.includes("txt")){
+            if(itemList.sIDs.includes(objects[i].id)){
+                objects[i].c = c;
+            }
+        }
+    }
+}
+
+function updateTxtSize(val){
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id.includes("txt")){
+            if(itemList.sIDs.includes(objects[i].id)){
+                objects[i].textSize = parseInt(val);
+            }
+        }
+    }
+}
+
+function updateTxtAlignV(val){
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id.includes("txt")){
+            if(itemList.sIDs.includes(objects[i].id)){
+                objects[i].align.y = val;
+            }
+        }
+    }
+}
+
+function updateTxtAlignH(val){
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id.includes("txt")){
+            if(itemList.sIDs.includes(objects[i].id)){
+                objects[i].align.x = val;
+            }
+        }
+    }
+}
+
+function findObjByID(id){
+    for(let i=0; i<objects.length; i++){
+        if(objects[i].id === id){
+            return objects[i];
+        }
+    }
+}
+
+function setCanvasPercents(val){
+    let temp = val.split(",");
+    temp[0] = parseInt(temp[0]);
+    temp[1] = parseInt(temp[1]);
+    fp.w = temp[0]/innerWidth;
+    fp.h = temp[1]/innerHeight;
+    resizeMain();
 }
