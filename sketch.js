@@ -49,7 +49,7 @@ function setup(){
         <button>Menu</button>
         <div class="dropdown-content">
         <button onclick="createJS()">Save</button>
-        <button onclick="console.log('not implimented yet')">Open</button>
+        <button onclick="alert('not implimented yet')">Open</button>
         <button onclick="setCanvasPercents(prompt('width,height'))">Set Canvas Size</button>
         <button onclick="alert('${fp.w*innerWidth},${fp.h*innerHeight}')">Get Canvas Size</button>
         </div>
